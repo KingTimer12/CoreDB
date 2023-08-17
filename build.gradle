@@ -1,8 +1,9 @@
 plugins {
     id 'java'
+    id 'maven-publish'
 }
 
-group 'org.example'
+group 'br.com.timer'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -28,4 +29,16 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'br.com.timer'
+            artifactId = 'CoreDB'
+            version = '1.0'
+
+            from components.java
+        }
+    }
 }
