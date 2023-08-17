@@ -78,7 +78,7 @@ public abstract class SQLHandler implements DBBackend {
      *
      * @return The class to which it belongs (SQLHandler)
      */
-    public DataHandler fetch(String from, Row where) {
+    public DataHandler fetch(String from, Row... where) {
         return fetch(from, "*", where);
     }
 
