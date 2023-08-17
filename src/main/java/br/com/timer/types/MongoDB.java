@@ -1,4 +1,4 @@
-package br.com.timer.types;
+/*package br.com.timer.types;
 
 import br.com.timer.interfaces.DBBackend;
 import br.com.timer.objects.rows.Row;
@@ -63,3 +63,4 @@ public class MongoDB implements DBBackend {
     }
 
 }
+*/
