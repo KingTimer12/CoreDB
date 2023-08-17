@@ -67,7 +67,7 @@ public abstract class SQLHandler implements DBBackend {
      * @return The class to which it belongs (SQLHandler)
      */
     public DataHandler fetch(String from) {
-        return fetch(from, "*", null);
+        return fetch(from, "*", (Row) null);
     }
 
     /***
@@ -162,24 +162,26 @@ public abstract class SQLHandler implements DBBackend {
      *
      * @param from The table name
      * @param filter Each row is part of the column
-     * @param where Condition for the search
+     * @param wheres Condition for the search
      *
      * @return The class to which it belongs (SQLHandler)
      */
-    public DataHandler fetch(String from, String filter, Row where) {
+    public DataHandler fetch(String from, String filter, Row... wheres) {
         final List<Row> rows = new ArrayList<>();
         if (filter == null || filter.equals(""))
             filter = "*";
-        String query = "SELECT " + filter + " FROM `" + from + "` ";
+        StringBuilder query = new StringBuilder("SELECT " + filter + " FROM `" + from + "` ");
 
         boolean wher = false;
-        if (where != null && !where.getField().equals("")) {
-            query += "WHERE `"+where.getField()+"`=?";
+        if (wheres != null) {
+            query.append("WHERE `").append(wheres[0].getField()).append("`=?");
+            if (wheres.length > 1) for (int i = 1; i < wheres.length; i++)
+                query.append(" AND `").append(wheres[i].getField()).append("`=?");
             wher = true;
         }
         openConnection();
-        try (final PreparedStatement statement = connection.prepareStatement(query)) {
-            if (wher) statement.setObject(1, where.getValue());
+        try (final PreparedStatement statement = connection.prepareStatement(query.toString())) {
+            if (wher) for (Row where : wheres) statement.setObject(1, where.getValue());
             try (final ResultSet resultSet = statement.executeQuery()) {
                 final ResultSetMetaData metaData = resultSet.getMetaData();
                 int stop = -1;
