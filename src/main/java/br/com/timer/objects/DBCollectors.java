@@ -5,8 +5,8 @@ import br.com.timer.interfaces.DBBackend;
 
 public class DBCollectors {
 
-    public static <T extends DBBackend> DBCollector<T> openConnection(T type) {
-        return new DBCollector<>(type).openConnection();
+    public static <T extends DBBackend> DBCollector<T> create(T type) {
+        return new DBCollector<>(type);
     }
 
 }
