@@ -172,6 +172,7 @@ public abstract class SQLHandler implements DBBackend {
             filter = "*";
         StringBuilder query = new StringBuilder("SELECT " + filter + " FROM `" + from + "` ");
 
+        boolean next = false;
         boolean wher = false;
         if (wheres != null) {
             query.append("WHERE `").append(wheres[0].getField()).append("`=?");
@@ -186,6 +187,7 @@ public abstract class SQLHandler implements DBBackend {
                 final ResultSetMetaData metaData = resultSet.getMetaData();
                 int stop = -1;
                 while (resultSet.next()) {
+                    next = true;
                     int i = 1;
                     while (true) {
                         try {
@@ -207,7 +209,7 @@ public abstract class SQLHandler implements DBBackend {
         } finally {
             closeConnection();
         }
-        return new DataHandler(rows);
+        return new DataHandler(rows, next);
     }
 
     private void executeAction(String statment, List<Row> paramsList) {
