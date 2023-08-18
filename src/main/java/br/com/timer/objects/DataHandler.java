@@ -15,13 +15,7 @@ public class DataHandler {
     private final boolean next;
 
     public void of(Consumer<Row> consumer) {
-        of(null, consumer);
-    }
-
-    public void of(String field, Consumer<Row> consumer) {
-        if (field == null)
-            rows.forEach(consumer);
-        rows.stream().filter(f -> f.getField().equalsIgnoreCase(field)).forEach(consumer);
+        rows.forEach(consumer);
     }
 
 }

@@ -182,7 +182,11 @@ public abstract class SQLHandler implements DBBackend {
         }
         openConnection();
         try (final PreparedStatement statement = connection.prepareStatement(query.toString())) {
-            if (wher) for (Row where : wheres) statement.setObject(1, where.getValue());
+            int paramIndex = 0;
+            if (wher)
+                for (Row where : wheres) {
+                    statement.setObject(paramIndex++, where.getValue());
+                }
             try (final ResultSet resultSet = statement.executeQuery()) {
                 final ResultSetMetaData metaData = resultSet.getMetaData();
                 int stop = -1;
