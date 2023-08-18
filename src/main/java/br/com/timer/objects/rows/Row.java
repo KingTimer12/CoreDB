@@ -12,7 +12,7 @@ public class Row implements Params {
     private final Object value;
 
     public Object get(String field) {
-        return this.field.equalsIgnoreCase(field);
+        return this.field.equalsIgnoreCase(field) ? this.value : null;
     }
 
 }

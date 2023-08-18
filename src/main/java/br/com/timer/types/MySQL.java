@@ -24,10 +24,8 @@ public class MySQL extends SQLHandler {
 
             Class.forName("com.mysql.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", username, password);
-            System.out.println("Open MySQL connection successfully");
         } catch (ClassNotFoundException | SQLException exception) {
             query--;
-            System.out.println("Erro ao abrir a conexao MySQL!");
             exception.printStackTrace();
         }
     }
@@ -41,8 +39,7 @@ public class MySQL extends SQLHandler {
                     connection.close();
                 connection = null;
             } catch (Exception e) {
-                System.out.println(
-                        "Erro ao fechar conexao MySQL!");
+                e.printStackTrace();
             }
         }
     }

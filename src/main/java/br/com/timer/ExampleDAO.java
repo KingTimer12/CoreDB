@@ -9,7 +9,7 @@ import java.util.UUID;
 @TableName(name = "exampleDAO")
 public class ExampleDAO {
 
-    @ColumnRow(field = "uuid", typeField = TypeField.VARCHAR)
+    @ColumnRow(field = "uuid", typeField = TypeField.VARCHAR, size = 64)
     private UUID uuid;
 
     @ColumnRow(field = "name", typeField = TypeField.TEXT)

@@ -144,7 +144,6 @@ public abstract class SQLHandler implements DBBackend {
             }
         }
         builder.append(") ENGINE = InnoDB DEFAULT CHARSET = UTF8;");
-        System.out.println(builder);
 
         openConnection();
         try (final Statement ps = connection.createStatement()) {
@@ -182,7 +181,7 @@ public abstract class SQLHandler implements DBBackend {
         }
         openConnection();
         try (final PreparedStatement statement = connection.prepareStatement(query.toString())) {
-            int paramIndex = 0;
+            int paramIndex = 1;
             if (wher)
                 for (Row where : wheres) {
                     statement.setObject(paramIndex++, where.getValue());
