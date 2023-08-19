@@ -19,4 +19,8 @@ public class DataHandler {
         return rows.stream().filter(f -> f.getField().equalsIgnoreCase(field)).findAny();
     }
 
+    public void of(Consumer<Row> rowConsumer) {
+        rows.forEach(rowConsumer);
+    }
+
 }

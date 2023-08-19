@@ -1,5 +1,6 @@
 package br.com.timer.objects.rows;
 
+import br.com.timer.annotations.PrimaryKeyAutoIncrement;
 import br.com.timer.interfaces.Params;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ public class RowCreate implements Params {
     private final String key;
     private final TypeField typeField;
     private final int size;
+    private final Object defaultValue;
     private final boolean isNull;
+    private final boolean autoIncrement;
 
 }

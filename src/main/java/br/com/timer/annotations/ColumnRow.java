@@ -8,8 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ColumnRow {
 
-    String field();
-    TypeField typeField();
+    String field() default "null";
+    TypeField typeField() default TypeField.EMPTY;
     int size() default 0;
     boolean isNull() default false;
 

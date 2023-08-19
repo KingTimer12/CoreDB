@@ -11,8 +11,8 @@ public class Row implements Params {
     private final String field;
     private final Object value;
 
-    public Object get(String field) {
-        return this.field.equalsIgnoreCase(field) ? this.value : null;
+    public String toStringEncoded() {
+        return field + "=?";
     }
 
 }

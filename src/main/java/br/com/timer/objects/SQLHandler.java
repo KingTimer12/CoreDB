@@ -1,19 +1,22 @@
 package br.com.timer.objects;
 
 import br.com.timer.annotations.ColumnRow;
+import br.com.timer.annotations.PrimaryKeyAutoIncrement;
 import br.com.timer.annotations.TableName;
 import br.com.timer.interfaces.DBBackend;
+import br.com.timer.interfaces.DAO;
 import br.com.timer.objects.rows.Row;
 import br.com.timer.objects.rows.RowCreate;
 import br.com.timer.objects.rows.Rows;
+import br.com.timer.objects.rows.TypeField;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
@@ -33,7 +36,7 @@ public abstract class SQLHandler implements DBBackend {
      * @return The class to which it belongs (SQLHandler)
      */
     public SQLHandler table(String table, RowCreate... rows) {
-        return table(table, Arrays.asList(rows));
+        return table(table, Set.of(rows));
     }
 
     /***
@@ -43,18 +46,31 @@ public abstract class SQLHandler implements DBBackend {
      *
      * @return The class to which it belongs (SQLHandler)
      */
-    public SQLHandler table(Class<?> tClass) {
+    @SneakyThrows
+    public SQLHandler table(Class<? extends DAO> tClass) {
         TableName tableName = tClass.getAnnotation(TableName.class);
-        List<ColumnRow> columnRows = new ArrayList<>();
+        Set<RowCreate> rows = new HashSet<>();
         for (Field field : tClass.getDeclaredFields()) {
             ColumnRow columnRow = field.getAnnotation(ColumnRow.class);
             if (columnRow != null) {
-                columnRows.add(columnRow);
+                String fieldName = columnRow.field();
+                if (Objects.equals(fieldName, "null")) {
+                    fieldName = field.getName();
+                }
+
+                PrimaryKeyAutoIncrement primaryKeyAutoIncrement = field.getAnnotation(PrimaryKeyAutoIncrement.class);
+                if (primaryKeyAutoIncrement != null) {
+                    rows.add(Rows.of(fieldName, TypeField.INT, 0, 0, false, true));
+                    continue;
+                }
+                TypeField fieldType = columnRow.typeField();
+                if (fieldType.equals(TypeField.EMPTY)) {
+                    fieldType = TypeField.get(field.getDeclaringClass()).orElse(TypeField.EMPTY);
+                }
+
+                field.setAccessible(true);
+                rows.add(Rows.of(fieldName, fieldType, columnRow.size(), null, columnRow.isNull()));
             }
-        }
-        List<RowCreate> rows = new ArrayList<>();
-        for (ColumnRow columnRow : columnRows) {
-            rows.add(Rows.of(columnRow.field(), columnRow.typeField(), columnRow.size(), columnRow.isNull()));
         }
         return table(tableName.name(), rows);
     }
@@ -111,7 +127,28 @@ public abstract class SQLHandler implements DBBackend {
 
         final String stmt = "INSERT INTO `" + table + "`" +
                 " (" + paramFieldsSplit + ") VALUES (" + paramValuesSplit + ")";
-        executeAction(stmt, rows);
+        executeAction(stmt, rows, null);
+        return this;
+    }
+
+    /***
+     * Insert new values into the table
+     *
+     * @param table The table name
+     * @param paramsList Each row is part of the column
+     * @param whereParams Row that searches for in the database
+     *
+     * @return The class to which it belongs (SQLHandler)
+     */
+    public SQLHandler update(String table, @NotNull List<Row> paramsList, @NotNull List<Row> whereParams) {
+        final List<String> whereParamsField = whereParams.stream().map(Row::toStringEncoded).collect(Collectors.toList());
+        final List<String> paramsListField = paramsList.stream().map(Row::toStringEncoded).collect(Collectors.toList());
+
+        final String paramsListSplit = String.join(",", paramsListField);
+        final String whereParamsSplit = String.join(",", whereParamsField);
+
+        final String stmt = "UPDATE " + table + " SET " + paramsListSplit + " WHERE " + whereParamsSplit;
+        executeAction(stmt, paramsList, whereParams);
         return this;
     }
 
@@ -123,19 +160,27 @@ public abstract class SQLHandler implements DBBackend {
      *
      * @return The class to which it belongs (SQLHandler)
      */
-    public SQLHandler table(String table, @org.jetbrains.annotations.NotNull List<RowCreate> rows) {
+    public SQLHandler table(String table, @org.jetbrains.annotations.NotNull Set<RowCreate> rows) {
         final StringBuilder builder = new StringBuilder("CREATE TABLE IF NOT EXISTS `" + table + "` (");
         if (!rows.isEmpty()) {
             int index = 1;
             for (RowCreate row : rows) {
                 builder.append("`").append(row.getKey()).append("` ");
-                if (row.getSize() == 0) {
-                    builder.append(row.getTypeField().name());
+                if (!row.isAutoIncrement()) {
+                    if (row.getSize() == 0) {
+                        builder.append(row.getTypeField().name());
+                    } else {
+                        builder.append(row.getTypeField().name()).append("(").append(row.getSize()).append(")");
+                    }
+                    if (row.getDefaultValue() == null) {
+                        if (!row.isNull()) {
+                            builder.append(" NOT NULL");
+                        }
+                    } else {
+                        builder.append(" DEFAULT ").append(row.getDefaultValue());
+                    }
                 } else {
-                    builder.append(row.getTypeField().name()).append("(").append(row.getSize()).append(")");
-                }
-                if (!row.isNull()) {
-                    builder.append(" NOT NULL");
+                    builder.append(" INT PRIMARY KEY AUTO_INCREMENT");
                 }
                 if (index < rows.size()) {
                     builder.append(", ");
@@ -215,10 +260,10 @@ public abstract class SQLHandler implements DBBackend {
         return new DataHandler(rows, next);
     }
 
-    private void executeAction(String statment, List<Row> paramsList) {
+    private void executeAction(String statment, List<Row> paramsList, @Nullable List<Row> conditions) {
         openConnection();
         try (final PreparedStatement preparedStatement = connection.prepareStatement(statment, RETURN_GENERATED_KEYS)) {
-            convertValue(preparedStatement, paramsList);
+            convertValue(preparedStatement, paramsList, conditions);
             preparedStatement.executeUpdate();
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -227,9 +272,18 @@ public abstract class SQLHandler implements DBBackend {
         }
     }
 
-    private void convertValue(PreparedStatement ps, List<Row> paramsList) throws SQLException {
-        for (int i = 0; i < paramsList.size(); i++) {
-            ps.setObject((i+1), paramsList.get(i).getValue());
+    private void convertValue(PreparedStatement ps, List<Row> paramsList, @Nullable List<Row> conditions) throws SQLException {
+        for (Row v : paramsList) {
+            final int index = paramsList.indexOf(v) + 1;
+            ps.setObject(index, v.getValue());
+        }
+
+        if (conditions != null) {
+            int lastValue = paramsList.size();
+            for (Row condition : conditions) {
+                int index = lastValue + 1;
+                ps.setObject(index, condition.getValue());
+            }
         }
     }
 

@@ -23,7 +23,7 @@ public class MySQL extends SQLHandler {
                 return;
 
             Class.forName("com.mysql.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", username, password);
+            connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&useUnicode=true&characterEncoding=UTF-8", username, password);
         } catch (ClassNotFoundException | SQLException exception) {
             query--;
             exception.printStackTrace();
