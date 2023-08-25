@@ -1,26 +1,25 @@
 package br.com.timer.objects;
 
-import br.com.timer.objects.rows.Row;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 @RequiredArgsConstructor
 public class DataHandler {
 
-    private final List<Row> rows;
+    private final Map<String, Data> data;
     @Getter
     private final boolean next;
 
-    public Optional<Row> get(String field) {
-        return rows.stream().filter(f -> f.getField().equalsIgnoreCase(field)).findAny();
+    public Optional<Data> get(String field) {
+        return Optional.ofNullable(data.get(field));
     }
 
-    public void of(Consumer<Row> rowConsumer) {
-        rows.forEach(rowConsumer);
+    public void of(BiConsumer<String, Data> rowConsumer) {
+        data.forEach(rowConsumer);
     }
 
 }

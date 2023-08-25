@@ -15,4 +15,13 @@ public class Row implements Params {
         return field + "=?";
     }
 
+    @Override
+    public String getKey() {
+        return field;
+    }
+
+    @Override
+    public Object getDefaultValue() {
+        return value;
+    }
 }

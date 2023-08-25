@@ -18,11 +18,11 @@ public class MariaDB extends SQLHandler {
     private final String database;
 
     @Override
-    public void openConnection() {
+    public long openConnection() {
         try {
             query++;
             if ((connection != null) && (!connection.isClosed()))
-                return;
+                return System.nanoTime();
 
             Class.forName("org.mariadb.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mariadb://"+host+"/" + database, username, password);
@@ -32,10 +32,11 @@ public class MariaDB extends SQLHandler {
             e.getStackTrace();
             e.printStackTrace();
         }
+        return System.nanoTime();
     }
 
     @Override
-    public void closeConnection() {
+    public long closeConnection() {
         query--;
         if (query <= 0) {
             try {
@@ -46,5 +47,6 @@ public class MariaDB extends SQLHandler {
                         "Houve um erro ao fechar a conexão!");
             }
         }
+        return System.nanoTime();
     }
 }

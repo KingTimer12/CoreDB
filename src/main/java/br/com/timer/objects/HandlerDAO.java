@@ -18,7 +18,7 @@ import java.util.*;
 public abstract class HandlerDAO implements DAO {
 
     @Override
-    public void save(Row... key) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
+    public void save(Row... key) {
         DBCollector<?> dbCollector = getDatabase();
         HandlerDAO handlerDAO = getHandle();
         Class<? extends HandlerDAO> tableClass = handlerDAO.getClass();
@@ -31,38 +31,37 @@ public abstract class HandlerDAO implements DAO {
                 PrimaryKeyAutoIncrement primaryKeyAutoIncrement = field.getAnnotation(PrimaryKeyAutoIncrement.class);
                 if (primaryKeyAutoIncrement != null) continue;
                 String fieldName = columnRow.field();
-                if (Objects.equals(fieldName, "null")) {
+                if (Objects.equals(fieldName, "null") || fieldName == null) {
                     fieldName = field.getName();
                 }
                 field.setAccessible(true);
-                Object fieldValue = field.get(handlerDAO);
-                if (fieldValue instanceof UUID) {
+                try {
+                    Object fieldValue = field.get(handlerDAO);
                     values.add(Rows.of(fieldName, String.valueOf(fieldValue)));
-                } else {
-                    values.add(Rows.of(fieldName, fieldValue));
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
 
-        if (dbCollector.getHandler() instanceof MySQL mySQL) {
-            String tableName = tableClass.getName();
-            TableName table = tableClass.getAnnotation(TableName.class);
-            if (table != null) {
-                tableName = table.name();
-            }
+        String tableName = tableClass.getName();
+        TableName table = tableClass.getAnnotation(TableName.class);
+        if (table != null) {
+            tableName = table.name();
+        }
 
-            if (mySQL.fetch(tableName, key).isNext()) {
-                List<Row> where = Arrays.asList(key);
-                mySQL.update(tableName, values, where);
-            } else {
-               mySQL.insert(tableName, values);
-            }
+        DataHandler dataHandler = dbCollector.getHandler().fetch().from(tableName).where(key).builder();
+        if (dataHandler.isNext()) {
+            List<Row> where = Arrays.asList(key);
+            dbCollector.getHandler().update(tableName, values, where);
+        } else {
+            dbCollector.getHandler().insert(tableName, values);
         }
 
     }
 
     @Override
-    public void load(Row... key) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public void load(Row... key) {
         DBCollector<?> dbCollector = getDatabase();
         HandlerDAO handlerDAO = getHandle();
         Class<? extends HandlerDAO> tableDAO = handlerDAO.getClass();
@@ -80,32 +79,28 @@ public abstract class HandlerDAO implements DAO {
             }
         }
 
-        if (dbCollector.getHandler() instanceof MySQL mySQL) {
-            String tableName = tableDAO.getName();
-            TableName table = tableDAO.getAnnotation(TableName.class);
-            if (table != null) {
-                tableName = table.name();
-            }
-            DataHandler dataHandler = mySQL.fetch(tableName, key);
-            if (dataHandler.isNext()) {
-                dataHandler.of(row -> {
-                    String fieldName = fieldMap.get(row.getField());
-                    Field field;
-                    try {
-                        field = tableDAO.getDeclaredField(fieldName);
-                        field.setAccessible(true);
-                        if (field.getType().equals(Double.class) || field.getType().equals(double.class)) {
-                            field.setDouble(handlerDAO, (Double) row.getValue());
-                        } else if (field.getType().equals(UUID.class)) {
-                            field.set(handlerDAO, UUID.fromString((String) row.getValue()));
-                        } else {
-                            field.set(handlerDAO, row.getValue());
-                        }
-                    } catch (NoSuchFieldException | IllegalAccessException e) {
-                        e.printStackTrace();
+        String tableName = tableDAO.getName();
+        TableName table = tableDAO.getAnnotation(TableName.class);
+        if (table != null) {
+            tableName = table.name();
+        }
+        DataHandler dataHandler = dbCollector.getHandler().fetch().from(tableName).where(key).builder();
+        if (dataHandler.isNext()) {
+            dataHandler.of((fieldString, data) -> {
+                String fieldName = fieldMap.get(fieldString);
+                Field field;
+                try {
+                    field = tableDAO.getDeclaredField(fieldName);
+                    field.setAccessible(true);
+                    if (field.getType().equals(UUID.class)) {
+                        field.set(handlerDAO, data.asUUID());
+                    } else {
+                        field.set(handlerDAO, data.asOther(field.getType()));
                     }
-                });
-            }
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 

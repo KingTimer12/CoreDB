@@ -1,11 +1,11 @@
 package br.com.timer.collectors;
 
-import br.com.timer.interfaces.DBBackend;
+import br.com.timer.interfaces.Database;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class DBCollector<T extends DBBackend> {
+public class DBCollector<T extends Database> {
 
     @Getter
     private final T handler;

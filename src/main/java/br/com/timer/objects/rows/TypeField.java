@@ -3,20 +3,21 @@ package br.com.timer.objects.rows;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
-@RequiredArgsConstructor
 public enum TypeField {
 
-    TEXT(String.class), INT(Integer.class), DOUBLE(Double.class), VARCHAR(UUID.class), EMPTY(null);
+    TEXT(String.class), INT(Integer.class, int.class), DOUBLE(Double.class, double.class), VARCHAR(UUID.class), EMPTY();
 
-    private final Class<?> aClass;
+    private final List<Class<?>> aClass = new ArrayList<>();
+
+    TypeField(Class<?>... classes) {
+        this.aClass.addAll(Arrays.asList(classes));
+    }
 
     public static Optional<TypeField> get(Class<?> aClass) {
-       return Arrays.stream(TypeField.values()).filter(typeField -> typeField.getAClass().isAssignableFrom(aClass)).findFirst();
+       return Arrays.stream(TypeField.values()).filter(t -> t.aClass.contains(aClass)).findAny();
     }
 
 }

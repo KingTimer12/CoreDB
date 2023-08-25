@@ -15,11 +15,11 @@ public class SQLite extends SQLHandler {
     private final File storage;
 
     @Override
-    public void openConnection() {
+    public long openConnection() {
         try {
             query++;
             if ((connection != null) && (!connection.isClosed()))
-                return;
+                return System.nanoTime();
 
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:" + storage);
@@ -30,10 +30,11 @@ public class SQLite extends SQLHandler {
             System.out.println(
                     "Ocorreu um erro ao abrir a conexão!");
         }
+        return System.nanoTime();
     }
 
     @Override
-    public void closeConnection() {
+    public long closeConnection() {
         query--;
         if (query <= 0) {
             try {
@@ -44,5 +45,6 @@ public class SQLite extends SQLHandler {
                         "Houve um erro ao fechar a conexão!");
             }
         }
+        return System.nanoTime();
     }
 }

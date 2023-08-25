@@ -3,8 +3,11 @@ package br.com.timer.objects;
 import br.com.timer.annotations.ColumnRow;
 import br.com.timer.annotations.PrimaryKeyAutoIncrement;
 import br.com.timer.annotations.TableName;
-import br.com.timer.interfaces.DBBackend;
+import br.com.timer.interfaces.Database;
 import br.com.timer.interfaces.DAO;
+import br.com.timer.interfaces.Params;
+import br.com.timer.interfaces.params.SQLParam;
+import br.com.timer.objects.builders.FetchBuilder;
 import br.com.timer.objects.rows.Row;
 import br.com.timer.objects.rows.RowCreate;
 import br.com.timer.objects.rows.Rows;
@@ -22,34 +25,21 @@ import java.util.stream.Collectors;
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 
 @Getter
-public abstract class SQLHandler implements DBBackend {
+public abstract class SQLHandler implements Database {
 
     protected int query = 0;
     protected Connection connection;
 
-    /***
-     * Create new tables with specifications
-     *
-     * @param table The table name
-     * @param rows Each row is part of the column
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
-    public SQLHandler table(String table, RowCreate... rows) {
-        return table(table, Set.of(rows));
+    @Override
+    public SQLHandler table(String table, Params... rows) {
+        return table(table, Arrays.stream(rows).map(row -> (RowCreate) row).collect(Collectors.toList()));
     }
 
-    /***
-     * Create new tables with specifications
-     *
-     * @param tClass The class for DAO structure
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
+    @Override
     @SneakyThrows
     public SQLHandler table(Class<? extends DAO> tClass) {
         TableName tableName = tClass.getAnnotation(TableName.class);
-        Set<RowCreate> rows = new HashSet<>();
+        List<RowCreate> rows = new ArrayList<>();
         for (Field field : tClass.getDeclaredFields()) {
             ColumnRow columnRow = field.getAnnotation(ColumnRow.class);
             if (columnRow != null) {
@@ -63,9 +53,10 @@ public abstract class SQLHandler implements DBBackend {
                     rows.add(Rows.of(fieldName, TypeField.INT, 0, 0, false, true));
                     continue;
                 }
+
                 TypeField fieldType = columnRow.typeField();
                 if (fieldType.equals(TypeField.EMPTY)) {
-                    fieldType = TypeField.get(field.getDeclaringClass()).orElse(TypeField.EMPTY);
+                    fieldType = TypeField.get(field.getType()).orElse(TypeField.EMPTY);
                 }
 
                 field.setAccessible(true);
@@ -75,52 +66,20 @@ public abstract class SQLHandler implements DBBackend {
         return table(tableName.name(), rows);
     }
 
-    /***
-     * Get the information that is in the database
-     *
-     * @param from The table name
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
-    public DataHandler fetch(String from) {
-        return fetch(from, "*", (Row) null);
+    @Override
+    public FetchBuilder fetch() {
+        return new FetchBuilder(this);
     }
 
-    /***
-     * Get the information that is in the database
-     *
-     * @param from The table name
-     * @param where Condition for the search
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
-    public DataHandler fetch(String from, Row... where) {
-        return fetch(from, "*", where);
-    }
-
-    /***
-     * Insert new values into the table
-     *
-     * @param table The table name
-     * @param rows Each row is part of the column
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
+    @Override
     public SQLHandler insert(String table, Row... rows) {
         return insert(table, Arrays.asList(rows));
     }
 
-    /***
-     * Insert new values into the table
-     *
-     * @param table The table name
-     * @param rows Each row is part of the column
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
+    @Override
     public SQLHandler insert(String table, @NotNull List<Row> rows) {
-        final List<String> paramFields = rows.stream().map(Row::getField).map(t -> t = "`"+t+"`").collect(Collectors.toList());
-        final List<String> paramValues = rows.stream().map(Row::getValue).map(String::valueOf).map(t -> t = "?").collect(Collectors.toList());
+        final List<String> paramFields = rows.stream().map(Row::getField).map(t -> "`"+t+"`").collect(Collectors.toList());
+        final List<String> paramValues = rows.stream().map(Row::getValue).map(String::valueOf).map(t -> "?").collect(Collectors.toList());
 
         final String paramFieldsSplit = String.join(",", paramFields);
         final String paramValuesSplit = String.join(",", paramValues);
@@ -131,15 +90,7 @@ public abstract class SQLHandler implements DBBackend {
         return this;
     }
 
-    /***
-     * Insert new values into the table
-     *
-     * @param table The table name
-     * @param paramsList Each row is part of the column
-     * @param whereParams Row that searches for in the database
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
+    @Override
     public SQLHandler update(String table, @NotNull List<Row> paramsList, @NotNull List<Row> whereParams) {
         final List<String> whereParamsField = whereParams.stream().map(Row::toStringEncoded).collect(Collectors.toList());
         final List<String> paramsListField = paramsList.stream().map(Row::toStringEncoded).collect(Collectors.toList());
@@ -152,25 +103,18 @@ public abstract class SQLHandler implements DBBackend {
         return this;
     }
 
-    /***
-     * Create new tables with specifications
-     *
-     * @param table The table name
-     * @param rows Each row is part of the column
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
-    public SQLHandler table(String table, @org.jetbrains.annotations.NotNull Set<RowCreate> rows) {
+    private SQLHandler table(String table, @NotNull List<? extends SQLParam> rows) {
         final StringBuilder builder = new StringBuilder("CREATE TABLE IF NOT EXISTS `" + table + "` (");
         if (!rows.isEmpty()) {
             int index = 1;
-            for (RowCreate row : rows) {
+            for (RowCreate row : rows.stream().map(row -> (RowCreate) row).collect(Collectors.toSet())) {
                 builder.append("`").append(row.getKey()).append("` ");
-                if (!row.isAutoIncrement()) {
+                if (!row.hasAutoIncrement()) {
                     if (row.getSize() == 0) {
                         builder.append(row.getTypeField().name());
                     } else {
-                        builder.append(row.getTypeField().name()).append("(").append(row.getSize()).append(")");
+                        builder.append(row.getTypeField().name()).append("(")
+                                .append(row.getSize()).append(")");
                     }
                     if (row.getDefaultValue() == null) {
                         if (!row.isNull()) {
@@ -190,92 +134,38 @@ public abstract class SQLHandler implements DBBackend {
         }
         builder.append(") ENGINE = InnoDB DEFAULT CHARSET = UTF8;");
 
-        openConnection();
+        final long start = openConnection();
         try (final Statement ps = connection.createStatement()) {
             ps.execute(builder.toString());
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            closeConnection();
+            final long end = closeConnection();
+            long elapsedTime = end - start;
+            double elapsedTimeInSeconds = (double) elapsedTime / 1_000_000_000.0;
+            System.out.println("Process duration: " + elapsedTimeInSeconds + " seconds");
         }
         return this;
     }
 
-    /***
-     * Get the information that is in the database
-     *
-     * @param from The table name
-     * @param filter Each row is part of the column
-     * @param wheres Condition for the search
-     *
-     * @return The class to which it belongs (SQLHandler)
-     */
-    public DataHandler fetch(String from, String filter, Row... wheres) {
-        final List<Row> rows = new ArrayList<>();
-        if (filter == null || filter.equals(""))
-            filter = "*";
-        StringBuilder query = new StringBuilder("SELECT " + filter + " FROM `" + from + "` ");
-
-        boolean next = false;
-        boolean wher = false;
-        if (wheres != null) {
-            query.append("WHERE `").append(wheres[0].getField()).append("`=?");
-            if (wheres.length > 1) for (int i = 1; i < wheres.length; i++)
-                query.append(" AND `").append(wheres[i].getField()).append("`=?");
-            wher = true;
-        }
-        openConnection();
-        try (final PreparedStatement statement = connection.prepareStatement(query.toString())) {
-            int paramIndex = 1;
-            if (wher)
-                for (Row where : wheres) {
-                    statement.setObject(paramIndex++, where.getValue());
-                }
-            try (final ResultSet resultSet = statement.executeQuery()) {
-                final ResultSetMetaData metaData = resultSet.getMetaData();
-                int stop = -1;
-                while (resultSet.next()) {
-                    next = true;
-                    int i = 1;
-                    while (true) {
-                        try {
-
-                            if (stop != -1 && stop == i)
-                                break;
-
-                            rows.add(Rows.of(metaData.getColumnName(i), resultSet.getObject(i)));
-                        } catch (SQLException ignored) {
-                            stop = i;
-                            break;
-                        }
-                        i++;
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeConnection();
-        }
-        return new DataHandler(rows, next);
-    }
-
     private void executeAction(String statment, List<Row> paramsList, @Nullable List<Row> conditions) {
-        openConnection();
+        final long start = openConnection();
         try (final PreparedStatement preparedStatement = connection.prepareStatement(statment, RETURN_GENERATED_KEYS)) {
             convertValue(preparedStatement, paramsList, conditions);
             preparedStatement.executeUpdate();
         } catch (Exception exception) {
             exception.printStackTrace();
         } finally {
-            closeConnection();
+            final long end = closeConnection();
+            long elapsedTime = end - start;
+            double elapsedTimeInSeconds = (double) elapsedTime / 1_000_000_000.0;
+            System.out.println("Process duration: " + elapsedTimeInSeconds + " seconds");
         }
     }
 
     private void convertValue(PreparedStatement ps, List<Row> paramsList, @Nullable List<Row> conditions) throws SQLException {
         for (Row v : paramsList) {
-            final int index = paramsList.indexOf(v) + 1;
-            ps.setObject(index, v.getValue());
+            ps.setObject(paramsList.indexOf(v)+1, v.getValue());
         }
 
         if (conditions != null) {

@@ -16,11 +16,11 @@ public class MySQL extends SQLHandler {
     private final String database;
 
     @Override
-    public void openConnection() {
+    public long openConnection() {
         try {
             query++;
             if ((connection != null) && (!connection.isClosed()))
-                return;
+                return System.nanoTime();
 
             Class.forName("com.mysql.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&useUnicode=true&characterEncoding=UTF-8", username, password);
@@ -28,10 +28,11 @@ public class MySQL extends SQLHandler {
             query--;
             exception.printStackTrace();
         }
+        return System.nanoTime();
     }
 
     @Override
-    public void closeConnection() {
+    public long closeConnection() {
         query--;
         if (query <= 0) {
             try {
@@ -42,6 +43,7 @@ public class MySQL extends SQLHandler {
                 e.printStackTrace();
             }
         }
+        return System.nanoTime();
     }
 
 }

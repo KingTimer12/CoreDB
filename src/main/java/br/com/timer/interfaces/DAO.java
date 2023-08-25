@@ -8,10 +8,10 @@ import java.lang.reflect.InvocationTargetException;
 
 public interface DAO {
 
-    void save(Row... keys) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException;
-    void load(Row... key) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException;
+    void save(Row... keys);
+    void load(Row... key);
 
     DBCollector<?> getDatabase();
-    HandlerDAO getHandle() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
+    HandlerDAO getHandle();
 
 }

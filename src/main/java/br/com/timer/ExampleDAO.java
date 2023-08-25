@@ -1,6 +1,7 @@
 package br.com.timer;
 
 import br.com.timer.annotations.ColumnRow;
+import br.com.timer.annotations.PrimaryKeyAutoIncrement;
 import br.com.timer.annotations.TableName;
 import br.com.timer.collectors.DBCollector;
 import br.com.timer.objects.HandlerDAO;
@@ -19,29 +20,25 @@ import java.util.UUID;
 @TableName(name = "exampleDAO")
 public class ExampleDAO extends HandlerDAO {
 
-    @ColumnRow(field = "uuid", typeField = TypeField.VARCHAR, size = 64)
+    @ColumnRow
+    @PrimaryKeyAutoIncrement
+    private int id;
+
+    @ColumnRow(size = 64)
     private UUID uuid;
 
-    @ColumnRow(field = "name", typeField = TypeField.TEXT)
+    @ColumnRow
     private String name;
 
-    @ColumnRow(field = "money", typeField = TypeField.DOUBLE)
+    @ColumnRow
     private double coins;
 
     public void save() {
-        try {
-            this.save(Rows.of("name", this.name));
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | InstantiationException e) {
-            e.printStackTrace();
-        }
+        this.save(Rows.of("name", this.name));
     }
 
     public void load() {
-        try {
-            this.load(Rows.of("name", this.name));
-        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        this.load(Rows.of("name", this.name));
     }
 
     @Override
