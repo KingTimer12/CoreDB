@@ -1,5 +1,4 @@
 module br.com.timer {
-    exports br.com.timer;
     exports br.com.timer.annotations;
     exports br.com.timer.collectors;
 
