@@ -1,12 +1,9 @@
-package br.com.timer;
+package br.com.timer.examples;
 
 import br.com.timer.collectors.DBCollector;
 import br.com.timer.objects.DBCollectors;
-import br.com.timer.objects.rows.Row;
 import br.com.timer.objects.rows.Rows;
 import br.com.timer.types.MySQL;
-
-import java.util.UUID;
 
 public class CoreDB {
 

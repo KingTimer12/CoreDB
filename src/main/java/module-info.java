@@ -11,6 +11,7 @@ module br.com.timer {
     exports br.com.timer.objects.builders;
 
     exports br.com.timer.types;
+    exports br.com.timer.examples;
 
     requires static lombok;
     requires org.jetbrains.annotations;

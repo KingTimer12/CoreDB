@@ -1,4 +1,4 @@
-package br.com.timer;
+package br.com.timer.examples;
 
 import br.com.timer.annotations.ColumnRow;
 import br.com.timer.annotations.PrimaryKeyAutoIncrement;
@@ -6,12 +6,10 @@ import br.com.timer.annotations.TableName;
 import br.com.timer.collectors.DBCollector;
 import br.com.timer.objects.HandlerDAO;
 import br.com.timer.objects.rows.Rows;
-import br.com.timer.objects.rows.TypeField;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
 
 @Getter
