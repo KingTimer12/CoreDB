@@ -74,9 +74,9 @@ public class FetchBuilder {
         boolean next = false;
         boolean wher = false;
         if (!orderBy) {
-            query.append("WHERE `").append(wheres.get(0).getField()).append("`=?");
+            query.append("WHERE ").append(wheres.get(0).toStringEncoded());
             if (wheres.size() > 1) for (int i = 1; i < wheres.size(); i++)
-                query.append(" AND `").append(wheres.get(i).getField()).append("`").append(wheres.get(i).toStringEncoded());
+                query.append(" AND ").append(wheres.get(i).toStringEncoded());
             wher = true;
         } else {
             query.append("ORDER BY ");
@@ -111,6 +111,7 @@ public class FetchBuilder {
         if (limit != 0) {
             query.append(" LIMIT ").append(limit);
         }
+        System.out.println(query.toString());
 
         handler.openConnection();
         try (final PreparedStatement statement = handler.getConnection().prepareStatement(query.toString())) {

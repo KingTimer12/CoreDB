@@ -107,7 +107,7 @@ public abstract class SQLHandler implements Database {
         final StringBuilder builder = new StringBuilder("CREATE TABLE IF NOT EXISTS `" + table + "` (");
         if (!rows.isEmpty()) {
             int index = 1;
-            for (RowCreate row : rows.stream().map(row -> (RowCreate) row).collect(Collectors.toSet())) {
+            for (RowCreate row : rows.stream().map(row -> (RowCreate) row).toList()) {
                 builder.append("`").append(row.getKey()).append("` ");
                 if (!row.hasAutoIncrement()) {
                     if (row.getSize() == 0) {

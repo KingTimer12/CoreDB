@@ -12,7 +12,7 @@ public class Row implements Params {
     private final Object value;
 
     public String toStringEncoded() {
-        return field + "=?";
+        return "`"+field + "`=?";
     }
 
     @Override

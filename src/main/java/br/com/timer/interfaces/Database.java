@@ -1,15 +1,11 @@
 package br.com.timer.interfaces;
 
 
-import br.com.timer.objects.DataHandler;
-import br.com.timer.objects.SQLHandler;
 import br.com.timer.objects.builders.FetchBuilder;
 import br.com.timer.objects.rows.Row;
-import br.com.timer.objects.rows.RowCreate;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Set;
 
 public interface Database {
 
