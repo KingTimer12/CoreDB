@@ -56,7 +56,7 @@ public abstract class SQLHandler implements Database {
 
                 TypeField fieldType = columnRow.typeField();
                 if (fieldType.equals(TypeField.EMPTY)) {
-                    fieldType = TypeField.get(field.getType()).orElse(TypeField.EMPTY);
+                    fieldType = !field.getType().isEnum() ? TypeField.get(field.getType()).orElse(TypeField.EMPTY) : TypeField.TEXT;
                 }
 
                 field.setAccessible(true);
@@ -133,6 +133,8 @@ public abstract class SQLHandler implements Database {
             }
         }
         builder.append(") ENGINE = InnoDB DEFAULT CHARSET = UTF8;");
+
+        System.out.println(builder.toString());
 
         final long start = openConnection();
         try (final Statement ps = connection.createStatement()) {

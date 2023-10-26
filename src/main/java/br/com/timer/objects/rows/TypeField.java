@@ -8,7 +8,7 @@ import java.util.*;
 @Getter
 public enum TypeField {
 
-    TEXT(String.class), INT(Integer.class, int.class), DOUBLE(Double.class, double.class), VARCHAR(UUID.class), EMPTY();
+    TEXT(String.class, Enum.class), INT(Integer.class, int.class), DOUBLE(Double.class, double.class), VARCHAR(UUID.class), EMPTY();
 
     private final List<Class<?>> aClass = new ArrayList<>();
 

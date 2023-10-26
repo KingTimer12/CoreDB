@@ -7,11 +7,9 @@ import br.com.timer.collectors.DBCollector;
 import br.com.timer.interfaces.DAO;
 import br.com.timer.objects.rows.Row;
 import br.com.timer.objects.rows.Rows;
-import br.com.timer.types.MySQL;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -37,7 +35,11 @@ public abstract class HandlerDAO implements DAO {
                 field.setAccessible(true);
                 try {
                     Object fieldValue = field.get(handlerDAO);
-                    values.add(Rows.of(fieldName, String.valueOf(fieldValue)));
+                    if (field.getType().isEnum()) {
+                        values.add(Rows.of(fieldName, ((Enum) fieldValue).name()));
+                    } else {
+                        values.add(Rows.of(fieldName, String.valueOf(fieldValue)));
+                    }
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
@@ -94,6 +96,8 @@ public abstract class HandlerDAO implements DAO {
                     field.setAccessible(true);
                     if (field.getType().equals(UUID.class)) {
                         field.set(handlerDAO, data.asUUID());
+                    } else if (field.getType().isEnum()) {
+                        field.set(handlerDAO, Enum.valueOf((Class<Enum>) field.getType(), data.asString()));
                     } else {
                         field.set(handlerDAO, data.asOther(field.getType()));
                     }

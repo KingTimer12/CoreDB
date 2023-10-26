@@ -6,16 +6,15 @@ import br.com.timer.annotations.TableName;
 import br.com.timer.collectors.DBCollector;
 import br.com.timer.objects.HandlerDAO;
 import br.com.timer.objects.rows.Rows;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
-@Getter
-@AllArgsConstructor
+
+@Data
 @NoArgsConstructor
 @TableName(name = "exampleDAO")
+@EqualsAndHashCode(callSuper = true)
 public class ExampleDAO extends HandlerDAO {
 
     @ColumnRow
@@ -30,6 +29,9 @@ public class ExampleDAO extends HandlerDAO {
 
     @ColumnRow
     private double coins;
+
+    @ColumnRow
+    private Roles roles;
 
     public void save() {
         this.save(Rows.of("name", this.name));
