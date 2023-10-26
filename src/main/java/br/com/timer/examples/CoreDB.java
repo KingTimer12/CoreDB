@@ -17,7 +17,7 @@ public class CoreDB {
         mySQLDBCollector.getHandler().table(ExampleDAO.class);
 
         ExampleDAO exampleDAO = new ExampleDAO();
-        exampleDAO.setName("Lucas");
+        exampleDAO.setName("Marcos");
         exampleDAO.load();
 
         System.out.println(exampleDAO.getRoles().name());
