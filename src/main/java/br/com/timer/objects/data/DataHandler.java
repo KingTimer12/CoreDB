@@ -1,4 +1,4 @@
-package br.com.timer.objects;
+package br.com.timer.objects.data;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -8,18 +8,17 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 
 @RequiredArgsConstructor
-public class DataHandler {
+public abstract class DataHandler implements IDataHandler {
 
-    private final Map<String, Data> data;
     @Getter
     private final boolean next;
 
-    public Optional<Data> get(String field) {
+    /*public Optional<Data> get(String field) {
         return Optional.ofNullable(data.get(field));
-    }
+    }*/
 
-    public void of(BiConsumer<String, Data> rowConsumer) {
+    /*public void of(BiConsumer<String, Data> rowConsumer) {
         data.forEach(rowConsumer);
-    }
+    }*/
 
 }

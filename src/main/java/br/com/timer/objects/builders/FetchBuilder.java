@@ -1,8 +1,11 @@
 package br.com.timer.objects.builders;
 
-import br.com.timer.objects.Data;
-import br.com.timer.objects.DataHandler;
+import br.com.timer.annotations.TableName;
+import br.com.timer.objects.HandlerDAO;
+import br.com.timer.objects.data.Data;
+import br.com.timer.objects.data.DataHandler;
 import br.com.timer.objects.SQLHandler;
+import br.com.timer.objects.data.types.FetchData;
 import br.com.timer.objects.rows.Row;
 import lombok.RequiredArgsConstructor;
 
@@ -19,13 +22,18 @@ public class FetchBuilder {
 
     private String from, filter;
     private final List<Row> wheres = new ArrayList<>();
-    private boolean orderBy;
-    private Map<String, OrderType> orderBySpecif;
-    private OrderType orderType;
     private int limit;
 
     public FetchBuilder from(String from) {
         this.from = from;
+        return this;
+    }
+
+    public FetchBuilder from(Class<? extends HandlerDAO> from) {
+        TableName table = from.getAnnotation(TableName.class);
+        if (table != null) {
+            this.from = table.name();
+        }
         return this;
     }
 
@@ -44,69 +52,21 @@ public class FetchBuilder {
         return this;
     }
 
-    public FetchBuilder orderBy(OrderType orderType) {
-        this.orderBy = true;
-        this.orderType = orderType;
-        this.orderBySpecif = null;
-        return this;
-    }
-
-    public FetchBuilder orderBy(OrderType orderType, String param) {
-        this.orderBy = true;
-        if (this.orderBySpecif == null) {
-            this.orderBySpecif = new HashMap<>();
-        }
-        this.orderBySpecif.put(param, orderType);
-        return this;
-    }
-
     public FetchBuilder limit(int limit) {
         this.limit = limit;
         return this;
     }
 
-    public DataHandler builder() {
+    public FetchData builder() {
         final Map<String, Data> rows = new HashMap<>();
         if (filter == null || filter.isEmpty())
             filter = "*";
         StringBuilder query = new StringBuilder("SELECT " + filter + " FROM `" + from + "` ");
 
         boolean next = false;
-        boolean wher = false;
-        if (!orderBy) {
-            query.append("WHERE ").append(wheres.get(0).toStringEncoded());
-            if (wheres.size() > 1) for (int i = 1; i < wheres.size(); i++)
-                query.append(" AND ").append(wheres.get(i).toStringEncoded());
-            wher = true;
-        } else {
-            query.append("ORDER BY ");
-            if (this.orderBySpecif == null) {
-                query.append("`").append(wheres.get(0).getField()).append("` ").append(orderType.getSyntax());
-                if (wheres.size() > 1) for (int i = 1; i < wheres.size(); i++)
-                    query.append(", `").append(wheres.get(i).getField()).append("` ").append(orderType.getSyntax());
-            } else {
-                int index = 0;
-                for (Row where : wheres) {
-                    if (orderBySpecif.containsKey(where.getField())) {
-                        if (index == 0) {
-                            query.append("`").append(where.getField()).append("` ")
-                                    .append(orderBySpecif.get(where.getField()).getSyntax());
-                        } else {
-                            query.append(", `").append(where.getField()).append("` ")
-                                    .append(orderBySpecif.get(where.getField()).getSyntax());
-                        }
-                    }
-                    if (index == 0) {
-                        query.append("`").append(where.getField()).append("` ")
-                                .append(orderType.getSyntax());
-                    } else {
-                        query.append(", `").append(where.getField()).append("` ")
-                                .append(orderType.getSyntax());
-                    }
-                    index++;
-                }
-            }
-        }
+        query.append("WHERE ").append(wheres.get(0).toStringEncoded());
+        if (wheres.size() > 1) for (int i = 1; i < wheres.size(); i++)
+            query.append(" AND ").append(wheres.get(i).toStringEncoded());
 
         if (limit != 0) {
             query.append(" LIMIT ").append(limit);
@@ -116,10 +76,9 @@ public class FetchBuilder {
         handler.openConnection();
         try (final PreparedStatement statement = handler.getConnection().prepareStatement(query.toString())) {
             int paramIndex = 1;
-            if (wher)
-                for (Row where : wheres) {
-                    statement.setObject(paramIndex++, where.getDefaultValue());
-                }
+            for (Row where : wheres) {
+                statement.setObject(paramIndex++, where.getDefaultValue());
+            }
             try (final ResultSet resultSet = statement.executeQuery()) {
                 final ResultSetMetaData metaData = resultSet.getMetaData();
                 int stop = -1;
@@ -144,7 +103,7 @@ public class FetchBuilder {
         } finally {
             handler.closeConnection();
         }
-        return new DataHandler(rows, next);
+        return new FetchData(rows, next);
     }
 
 }

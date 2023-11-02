@@ -8,6 +8,7 @@ import br.com.timer.objects.HandlerDAO;
 import br.com.timer.objects.rows.Rows;
 import lombok.*;
 
+import java.util.Date;
 import java.util.UUID;
 
 
@@ -32,6 +33,9 @@ public class ExampleDAO extends HandlerDAO {
 
     @ColumnRow
     private Roles roles;
+
+    @ColumnRow
+    private Date date;
 
     public void save() {
         this.save(Rows.of("name", this.name));

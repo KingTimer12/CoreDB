@@ -2,6 +2,7 @@ package br.com.timer.interfaces;
 
 
 import br.com.timer.objects.builders.FetchBuilder;
+import br.com.timer.objects.builders.ListBuilder;
 import br.com.timer.objects.rows.Row;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,6 +38,14 @@ public interface Database {
      * @return The class to which it belongs (DataHandler)
      */
     FetchBuilder fetch();
+
+    /***
+     * Get the information that is in the database
+     * in format of list
+     *
+     * @return The class to which it belongs (DataHandler)
+     */
+    ListBuilder list();
 
     /***
      * Insert new values into the table

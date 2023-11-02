@@ -6,6 +6,10 @@ public class Rows {
         return new Row(key, value);
     }
 
+    public static RowList of(String key) {
+        return new RowList(key);
+    }
+
     public static RowCreate of(String key, TypeField typeField) {
         return new RowCreate(key, typeField, 0, null, false, false);
     }

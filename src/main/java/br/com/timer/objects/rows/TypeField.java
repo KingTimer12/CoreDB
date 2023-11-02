@@ -8,12 +8,17 @@ import java.util.*;
 @Getter
 public enum TypeField {
 
-    TEXT(String.class, Enum.class), INT(Integer.class, int.class), DOUBLE(Double.class, double.class), VARCHAR(UUID.class), EMPTY();
+    TEXT(String.class),
+    DATE(Date.class),
+    INT(Integer.class, int.class),
+    DOUBLE(Double.class, double.class),
+    VARCHAR(UUID.class),
+    EMPTY();
 
-    private final List<Class<?>> aClass = new ArrayList<>();
+    private final Set<Class<?>> aClass = new HashSet<>();
 
     TypeField(Class<?>... classes) {
-        this.aClass.addAll(Arrays.asList(classes));
+        this.aClass.addAll(Set.of(classes));
     }
 
     public static Optional<TypeField> get(Class<?> aClass) {

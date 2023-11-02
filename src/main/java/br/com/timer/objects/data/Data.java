@@ -1,4 +1,4 @@
-package br.com.timer.objects;
+package br.com.timer.objects.data;
 
 import lombok.RequiredArgsConstructor;
 

@@ -5,6 +5,8 @@ import br.com.timer.annotations.PrimaryKeyAutoIncrement;
 import br.com.timer.annotations.TableName;
 import br.com.timer.collectors.DBCollector;
 import br.com.timer.interfaces.DAO;
+import br.com.timer.objects.data.DataHandler;
+import br.com.timer.objects.data.types.FetchData;
 import br.com.timer.objects.rows.Row;
 import br.com.timer.objects.rows.Rows;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,10 @@ public abstract class HandlerDAO implements DAO {
                     Object fieldValue = field.get(handlerDAO);
                     if (field.getType().isEnum()) {
                         values.add(Rows.of(fieldName, ((Enum) fieldValue).name()));
+                    } else if (field.getType().equals(Date.class)) {
+                        Date utilDate = (Date) fieldValue;
+                        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+                        values.add(Rows.of(fieldName, sqlDate));
                     } else {
                         values.add(Rows.of(fieldName, String.valueOf(fieldValue)));
                     }
@@ -86,7 +92,7 @@ public abstract class HandlerDAO implements DAO {
         if (table != null) {
             tableName = table.name();
         }
-        DataHandler dataHandler = dbCollector.getHandler().fetch().from(tableName).where(key).builder();
+        FetchData dataHandler = dbCollector.getHandler().fetch().from(tableName).where(key).builder();
         if (dataHandler.isNext()) {
             dataHandler.of((fieldString, data) -> {
                 String fieldName = fieldMap.get(fieldString);

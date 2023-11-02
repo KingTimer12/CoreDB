@@ -8,6 +8,7 @@ import br.com.timer.interfaces.DAO;
 import br.com.timer.interfaces.Params;
 import br.com.timer.interfaces.params.SQLParam;
 import br.com.timer.objects.builders.FetchBuilder;
+import br.com.timer.objects.builders.ListBuilder;
 import br.com.timer.objects.rows.Row;
 import br.com.timer.objects.rows.RowCreate;
 import br.com.timer.objects.rows.Rows;
@@ -69,6 +70,11 @@ public abstract class SQLHandler implements Database {
     @Override
     public FetchBuilder fetch() {
         return new FetchBuilder(this);
+    }
+
+    @Override
+    public ListBuilder list() {
+        return new ListBuilder(this);
     }
 
     @Override
