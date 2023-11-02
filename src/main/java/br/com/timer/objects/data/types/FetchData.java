@@ -19,7 +19,7 @@ public class FetchData extends DataHandler {
     }
 
     @Override
-    public Optional<?> get(String field) {
+    public Optional<Data> get(String field) {
         return Optional.ofNullable(this.data.get(field));
     }
 
