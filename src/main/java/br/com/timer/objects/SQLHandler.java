@@ -125,6 +125,8 @@ public abstract class SQLHandler implements Database {
                     if (row.getDefaultValue() == null) {
                         if (!row.isNull()) {
                             builder.append(" NOT NULL");
+                        } else if (row.getTypeField().equals(TypeField.DATE)) {
+                            builder.append(" NULL");
                         }
                     } else {
                         builder.append(" DEFAULT ").append(row.getDefaultValue());

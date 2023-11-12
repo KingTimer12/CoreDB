@@ -7,18 +7,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
+@Getter
 @RequiredArgsConstructor
 public abstract class DataHandler implements IDataHandler {
 
-    @Getter
     private final boolean next;
-
-    /*public Optional<Data> get(String field) {
-        return Optional.ofNullable(data.get(field));
-    }*/
-
-    /*public void of(BiConsumer<String, Data> rowConsumer) {
-        data.forEach(rowConsumer);
-    }*/
 
 }

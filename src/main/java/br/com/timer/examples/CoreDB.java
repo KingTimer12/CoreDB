@@ -21,6 +21,7 @@ public class CoreDB {
 
         createAccount("Lucas");
         createAccount("Marcos");
+        createAccount("Miles");
 
         updateAccount("Marcos");
 
@@ -34,7 +35,6 @@ public class CoreDB {
         ExampleDAO exampleDAO = new ExampleDAO();
         exampleDAO.setName(name);
         exampleDAO.setUuid(UUID.randomUUID());
-        exampleDAO.setDate(new Date(System.currentTimeMillis()));
         exampleDAO.setRoles(Roles.ADMIN);
         exampleDAO.setCoins(10D);
         exampleDAO.save();

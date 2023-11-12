@@ -41,7 +41,7 @@ public abstract class HandlerDAO implements DAO {
                         values.add(Rows.of(fieldName, ((Enum) fieldValue).name()));
                     } else if (field.getType().equals(Date.class)) {
                         Date utilDate = (Date) fieldValue;
-                        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+                        java.sql.Date sqlDate = utilDate != null ? new java.sql.Date(utilDate.getTime()) : null;
                         values.add(Rows.of(fieldName, sqlDate));
                     } else {
                         values.add(Rows.of(fieldName, String.valueOf(fieldValue)));

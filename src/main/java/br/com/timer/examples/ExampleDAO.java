@@ -34,7 +34,7 @@ public class ExampleDAO extends HandlerDAO {
     @ColumnRow
     private Roles roles;
 
-    @ColumnRow
+    @ColumnRow(isNull = true)
     private Date date;
 
     public void save() {
