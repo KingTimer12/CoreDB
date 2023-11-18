@@ -141,9 +141,7 @@ public abstract class SQLHandler implements Database {
             }
         }
         builder.append(") ENGINE = InnoDB DEFAULT CHARSET = UTF8;");
-
-        System.out.println(builder.toString());
-
+        System.out.println(builder);
         final long start = openConnection();
         try (final Statement ps = connection.createStatement()) {
             ps.execute(builder.toString());
@@ -160,6 +158,7 @@ public abstract class SQLHandler implements Database {
 
     private void executeAction(String statment, List<Row> paramsList, @Nullable List<Row> conditions) {
         final long start = openConnection();
+        System.out.println(statment);
         try (final PreparedStatement preparedStatement = connection.prepareStatement(statment, RETURN_GENERATED_KEYS)) {
             convertValue(preparedStatement, paramsList, conditions);
             preparedStatement.executeUpdate();
